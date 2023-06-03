@@ -1,0 +1,49 @@
+boot.o: boot.S multiboot.h x86_desc.h types.h
+interrupt_linkage.o: interrupt_linkage.S interrupt_linkage.h idt.h \
+  system_call.h
+iret_setup.o: iret_setup.S
+paging_func.o: paging_func.S
+pit_handler.o: pit_handler.S
+x86_desc.o: x86_desc.S x86_desc.h types.h
+file_system.o: file_system.c file_system.h x86_desc.h types.h lib.h \
+  system_call.h file_system_driver.h rtc.h i8259.h terminal_driver.h \
+  interrupt_linkage.h idt.h keyboard.h pit.h paging.h
+file_system_driver.o: file_system_driver.c file_system_driver.h \
+  x86_desc.h types.h lib.h system_call.h file_system.h rtc.h i8259.h \
+  terminal_driver.h interrupt_linkage.h idt.h keyboard.h pit.h paging.h
+i8259.o: i8259.c i8259.h types.h lib.h system_call.h file_system.h \
+  x86_desc.h file_system_driver.h rtc.h terminal_driver.h \
+  interrupt_linkage.h idt.h keyboard.h pit.h paging.h
+idt.o: idt.c idt.h x86_desc.h types.h keyboard.h lib.h system_call.h \
+  file_system.h file_system_driver.h rtc.h i8259.h terminal_driver.h \
+  interrupt_linkage.h paging.h pit.h
+idt_functions.o: idt_functions.c idt.h x86_desc.h types.h keyboard.h \
+  lib.h system_call.h file_system.h file_system_driver.h rtc.h i8259.h \
+  terminal_driver.h interrupt_linkage.h paging.h pit.h
+kernel.o: kernel.c multiboot.h types.h x86_desc.h lib.h system_call.h \
+  file_system.h file_system_driver.h rtc.h i8259.h terminal_driver.h \
+  interrupt_linkage.h idt.h keyboard.h pit.h paging.h debug.h tests.h
+keyboard.o: keyboard.c keyboard.h types.h lib.h system_call.h \
+  file_system.h x86_desc.h file_system_driver.h rtc.h i8259.h \
+  terminal_driver.h interrupt_linkage.h idt.h pit.h paging.h
+lib.o: lib.c lib.h types.h system_call.h file_system.h x86_desc.h \
+  file_system_driver.h rtc.h i8259.h terminal_driver.h \
+  interrupt_linkage.h idt.h keyboard.h pit.h paging.h
+paging.o: paging.c paging.h types.h lib.h system_call.h file_system.h \
+  x86_desc.h file_system_driver.h rtc.h i8259.h terminal_driver.h \
+  interrupt_linkage.h idt.h keyboard.h pit.h
+pit.o: pit.c types.h lib.h system_call.h file_system.h x86_desc.h \
+  file_system_driver.h rtc.h i8259.h terminal_driver.h \
+  interrupt_linkage.h idt.h keyboard.h pit.h paging.h
+rtc.o: rtc.c rtc.h types.h lib.h system_call.h file_system.h x86_desc.h \
+  file_system_driver.h terminal_driver.h interrupt_linkage.h idt.h \
+  keyboard.h i8259.h pit.h paging.h
+system_call.o: system_call.c system_call.h lib.h types.h file_system.h \
+  x86_desc.h file_system_driver.h rtc.h i8259.h terminal_driver.h \
+  interrupt_linkage.h idt.h keyboard.h pit.h paging.h
+terminal_driver.o: terminal_driver.c keyboard.h types.h lib.h \
+  system_call.h file_system.h x86_desc.h file_system_driver.h rtc.h \
+  i8259.h terminal_driver.h interrupt_linkage.h idt.h pit.h paging.h
+tests.o: tests.c tests.h x86_desc.h types.h paging.h lib.h system_call.h \
+  file_system.h file_system_driver.h rtc.h i8259.h terminal_driver.h \
+  interrupt_linkage.h idt.h keyboard.h pit.h

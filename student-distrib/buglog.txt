@@ -1,0 +1,148 @@
+------------------   Checkpoint 1    -------------------
+Bug 1
+Where: x86_desc.S - gdt_desc_ptr
+What: gdt_desc_ptr definition didn't fix bootlooping
+When: gdt initialization
+Fix:  Was missing .align4 and .word 0 for padding
+
+Bug 2
+Where: idt_functions.c
+What:  Multiple exceptions can be raised consecutively
+When:  During idt exception tests with div_by_0 and page_fault
+Fix:   Add while(1) after print statements to spin
+
+Bug 3
+Where: paging_func.S
+What:  Paging caused bootlooping
+When:  During initialization for paging
+Fix:   Needed padding by alignment for paging_table and paging_directory
+
+Bug 4
+Where: paging.h
+What:  Paging caused bootlooping
+When:  During initialization for paging
+Fix:   In paging_directory and paging_table struct order of fields matter. Least significant to most significant. And compression. Also created union of 4KB and 4MB structs for paging_directory.
+
+Bug 5
+Where:  i8259.c
+What:   send_function was not working correctly for the primary. 
+When:   Whenever a send_eoi function was called for interrupts on keyboard and rtc.
+Fix:    We were calling the wrong masking value to send out to the master port. Used master_mask instead of the calculated MaskTemp value.
+
+Bug 6
+Where:  keyboard.c
+What:   Unable to get the correct indexing on the characters read in from the keyboard data port.
+When:   Whenever a keyboard interrupt happens and keycode value is read.
+Fix:    Masked to keep only lower 8 bits of the value to have correct index value. And'ed read value with 0xFF.
+
+Bug 7
+Where: rtc.c 
+What: Function did not work at all. Handler was never getting called so no test_interrupts().
+When: When we initialized our RTC.
+Fix: Accidentally didn't swap the inputs for outb and inb from OSDev.
+
+------------------   Checkpoint 2    -------------------
+Bug 1
+Where: rtc.c 
+What: Page faulting due to getting stuck in an infinite while loop.
+When: Whenever rtc_read was called.
+Fix: The flag I was using to check if an RTC interrupt had occured was declared as a volatile variable and was updated in both rtc_handler and in rtc_read. In order to fix the issue, I just had to disable IRQs for the RTC while updating the variable inside of rtc_rea (Call disable_irq/enable_irq before/after the variable update).
+
+Bug 2
+Where: file_system.c/read_data
+What: Printing out nothing
+When: When testing frame0.txt
+Fix: Rewrote read_data using memcpy with 1 byte instead of chunks of bytes at a time.
+
+Bug 3
+Where: terminal_driver.c/terminal_read
+What: Works for first iteration of read/write but messes up for consecutive ones
+When: When testing terminal_read/write
+Fix: Missing break statement for the enter condition
+
+Bug 4
+Where: keyboard.c/keyboard_input
+What:  Capslock issues with keys that aren't letters being the special characters
+When:  When capslock is pressed and pressing a value that isn't a letter.
+Fix:   Added a special letter scancode to check flag the caps flag.
+
+Bug 5
+Where: lib.c/putc
+What:  Tab will not add extra spaces if at far right of the screen. 
+When:  When tab is pressed at last coloum
+Fix:   added special test case in put c for tab at enge of screen to tab correct amount of spaces on scroll.
+
+------------------   Checkpoint 3    -------------------
+
+Bug 1
+Where:  lib.c/putc
+What:   Backspace into the 391 OSDev in the terminal.
+When:   Whenever tab was pressed and delteded, some words would not delete.
+Fix:    Changed tab to delete whenever the keyyboard_buffer[keyindex - 1] = TAB. Then made the change to stop backspace if keyIndex < 0. This allowed 391OS> to not be deleted. 
+
+Bug 2
+Where:  system_call.c/execute
+What:   We were not grabbing the EIP correctly from the 4 bytes buffer.
+When:   When calling read_data with inode number, starting at 24 until 27.
+Fix:    Tried 3 methods, memcpy, shifting, and casting the buffer. Ultimately bit shifting all 4 bytes in the buffer to the right index and ORing them together to form a 32 bit address. 
+
+Bug 3
+Where:  system_call.c/read
+What:   In read (but also open, close, and write), we would update the variable cur_pcb using a helper function that was created. However, this helper function was returning the wrong address, so cur_pcb was being updated incorrectly, when in fact it did not need to be updated at all.
+When:   Whenever read was called. 
+Fix:    Removing all lines that update cur_pcb in read, write, open, and close fixed the issue.      
+
+Bug 4
+Where:  file_system_driver.c/directory_read
+What:   directory read was not correctly printing all the file names when it was called during the ls process
+When:   Whenever ls was called
+Fix:    Added a global variable counter that incremented inside directory_read and was reset in directory_open
+
+Bug 5
+Where:  system_call.c/execute
+What:   Stack was incorrect
+When:   When running halt
+Fix:    Saving ebp and esp occur after all local variable delcarations, which modify the stack.
+
+------------------   Checkpoint 4    -------------------
+
+Bug 1
+Where: file_system.c/read_dentry_by_name
+What:  running grep would result in a file open error for verylargetextwithverylongname.tx
+When:  When running grep
+Fix:   Added a check to limit the length of the stored file name to 32 bytes
+
+Bug 2
+Where: system_call.c/sys_execute
+What:  after typing in testprintt, no other commands would work 
+When:  after typing testprintt
+Fix:   cleared the file and argument related parameters in pcb block whenever an invalid file or argument was passed in
+
+------------------   Checkpoint 5    -------------------
+
+Bug 1
+Where:  system_call.c/scheduling
+What:   We were not able to correctly switch between the multiple processes.
+When:   When scheduling would be called by the pit, the processes on multiple terminals would not work when called.
+Fix:    We were referencing cur_pcb by reassigning the value each time. We switched to creating a new pcb and aquiring the 
+        address of the pcb for our function specific process we are running. 
+
+Bug 2
+Where:  system_call.c/terminal_switch
+What:   The terminal will page fault, get a general protection fault, or freeze. 
+When:   This happens when runnign processes on multiple terminals and switching between all three very fast. 
+Fix:    We were remapping the terminals in terminal switch when we did not need to, we only need to remap in schedule. 
+
+Bug 3
+Where:  lib.c
+What:   We were having the fish imaging show on multiple lines during terminal switches.
+When:   When we switch fast between terminals, the fish image would essentially repeal or scroll onto other lines.
+Fix:    We needed to ensure that we used a different terminal variable than the global terminal variable. The global current_terminal 
+        and displayed_terminal can change at any moment. Additionally, we needed to add sti() and cli() in our lib.c functions to allow
+        cursor position to update and not be interrupted. 
+
+Bug 4
+Where:  pingpong/rtc_reads
+What:   When pinpong is running on all 3 terminals, the speed of the 3 terminals is different. 
+When:   When pinpong is running on all 3 terminals.
+Fix:    We made terminal specific rtc_counters so that each terminal uses it's own counter than having the rtc use the same counter for all 3 terminals. 
